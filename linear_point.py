@@ -28,18 +28,19 @@ def xi(r, kmin, kmax, pk):
 # first derivative of correlation function
 
 
-def xi_r(r, kmin, kmax, pk):
+def xi_r(r, kmin, kmax, pk, a=1., n=4):
     """First derivative of two point correlation function.
     - pars
     r: float, correlation scale in real space
     kmin, kmax: floats, min and max of k range
     pk: function object, power spectrum as function of k, P(k)
+    a, n: parameters for filter exp(-(k/a)^n)
     - returns
     xi_r(r): float, value of first derivative of correlation func at r"""
     # sin and cos are omitted in the integrand because they're being weighted in quad
-    def int_a(k): return k**2 * np.exp(-k**4) * pk(k) / (2 * (np.pi**2) * r)
+    def int_a(k): return k**2 * np.exp(-(k/a)**n) * pk(k) / (2 * (np.pi**2) * r)
 
-    def int_b(k): return -1 * k**2 * np.exp(-k**4) * \
+    def int_b(k): return -1 * k**2 * np.exp(-(k/a)**n) * \
         pk(k) / (2 * (np.pi**2) * k * r**2)
     xi_r_a = quad(int_a, kmin, kmax, weight='cos', wvar=r)
     xi_r_b = quad(int_b, kmin, kmax, weight='sin', wvar=r)
@@ -88,12 +89,13 @@ def get_pk_func(results, kmin, kmax):
 # Linear point position from results object
 
 
-def lp_from_cosmo(results, kmin=0.001, kmax=100.):
+def lp_from_cosmo(results, kmin=0.001, kmax=100., a = 1., n = 4):
     """Given cambs results object, calculate position of linear point.
     - pars
     results: camb's results object
-    kmin, kmax: floats, limits in k space"""
+    kmin, kmax: floats, limits in k space (should be consistent with limis in results)
+    a, n: parameters for filter exp(-(k/a)^n)"""
     pk_func = get_pk_func(results, kmin, kmax)
-    dxi_dr = lambda r: xi_r(r, kmin, kmax, pk_func)
+    dxi_dr = lambda r: xi_r(r, kmin, kmax, pk_func, a, n)
     lp = get_lp(dxi_dr)
     return lp
