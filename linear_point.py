@@ -38,9 +38,10 @@ def xi_r(r, kmin, kmax, pk, a=1., n=4):
     - returns
     xi_r(r): float, value of first derivative of correlation func at r"""
     # sin and cos are omitted in the integrand because they're being weighted in quad
-    def int_a(k): return k**2 * np.exp(-(k/a)**n) * pk(k) / (2 * (np.pi**2) * r)
+    def int_a(k): return k**2 * np.exp(-(k / a)**n) * \
+        pk(k) / (2 * (np.pi**2) * r)
 
-    def int_b(k): return -1 * k**2 * np.exp(-(k/a)**n) * \
+    def int_b(k): return -1 * k**2 * np.exp(-(k / a)**n) * \
         pk(k) / (2 * (np.pi**2) * k * r**2)
     xi_r_a = quad(int_a, kmin, kmax, weight='cos', wvar=r)
     xi_r_b = quad(int_b, kmin, kmax, weight='sin', wvar=r)
@@ -49,7 +50,7 @@ def xi_r(r, kmin, kmax, pk, a=1., n=4):
 # Dip and peak positions given first derivative of correlation function
 
 
-def get_lp(xi_r, rmin=70., rmax=120., rsamples=8, root_dr = 3.):
+def get_lp(xi_r, rmin=60., rmax=150., rsamples=8, root_dr=3.):
     """Given first derivative of matter correlation function, get position of
     dip and peak.
     - pars
@@ -62,12 +63,12 @@ def get_lp(xi_r, rmin=70., rmax=120., rsamples=8, root_dr = 3.):
     # sample derivative in rsamples points and interpolate
     r_list = np.linspace(rmin, rmax, rsamples)
     xi_r_list = [xi_r(r) for r in r_list]
-    xi_r_interp = CubicSpline(r_list,xi_r_list, extrapolate=False)
+    xi_r_interp = CubicSpline(r_list, xi_r_list, extrapolate=False)
     # find roots of interpolated function
     roots = xi_r_interp.roots(extrapolate=False)
     # defined region to look for each root in derivative
-    ra = (roots[0]-root_dr, roots[0]+root_dr)
-    rb = (roots[1]-root_dr, roots[1]+root_dr)
+    ra = (roots[0] - root_dr, roots[0] + root_dr)
+    rb = (roots[1] - root_dr, roots[1] + root_dr)
     # find each root and return
     dip = brentq(xi_r, *ra)
     peak = brentq(xi_r, *rb)
@@ -89,13 +90,14 @@ def get_pk_func(results, kmin, kmax):
 # Linear point position from results object
 
 
-def lp_from_cosmo(results, kmin=0.001, kmax=100., a = 1., n = 4):
+def lp_from_cosmo(results, kmin=0.001, kmax=10., a=1., n=4):
     """Given cambs results object, calculate position of linear point.
     - pars
     results: camb's results object
     kmin, kmax: floats, limits in k space (should be consistent with limis in results)
     a, n: parameters for filter exp(-(k/a)^n)"""
     pk_func = get_pk_func(results, kmin, kmax)
-    dxi_dr = lambda r: xi_r(r, kmin, kmax, pk_func, a, n)
+
+    def dxi_dr(r): return xi_r(r, kmin, kmax, pk_func, a, n)
     lp = get_lp(dxi_dr)
     return lp
