@@ -82,7 +82,7 @@ def get_pk_func(results, kmin, kmax):
     - pars
     results: camb's results object
     kmin, kmax: floats, limits in k space"""
-    kh, z, [pk] = results.get_matter_power_spectrum(minkh=kmin * 0.99,
+    kh, z, [pk] = results.get_matter_power_spectrum(minkh=kmin * 0.999,
                                                     maxkh=kmax * 1.001,
                                                     npoints=500)
     return interpolate.interp1d(kh, pk, kind='cubic')
