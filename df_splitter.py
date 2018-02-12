@@ -15,17 +15,13 @@ import sys
 #%%
 
 in_df = sys.argv[1]
-print(in_df)
-#out_dir = sys.argv[2]
-#n_files = sys.argv[3]
+out_dir = sys.argv[2]
+n_files = int(sys.argv[3])
 
 fname = in_df.split('.')[-2].split('/')[-1]
-
 #%%
-# df = pd.read_pickle(in_df)
+df = pd.read_pickle(in_df)
 
-# for i, dfi in enumerate(np.array_split(df, n_files)):
-#     dfi.to_pickle(out_dir + '/{}_split_{}.pkl'.format(fname, i))
-#     print("Exported file {}/{}".format(i + 1, n_files))
-
-#%% testing exported files
+for i, dfi in enumerate(np.array_split(df, n_files)):
+    dfi.to_pickle(out_dir + '/{}_split_{}.pkl'.format(fname, i + 1))
+    print("Exported file {}/{}".format(i + 1, n_files))
