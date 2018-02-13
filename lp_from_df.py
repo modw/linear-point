@@ -16,14 +16,14 @@ import sys
 in_file = sys.argv[1]
 fname = in_file.split('.')[-2].split('/')[-1]
 
+# formatting out_dir
 if len(sys.argv) > 2:
     out_dir = sys.argv[2]
+    if out_dir[-1] != '/':
+        out_dir += '/'
 else:
     out_dir = './'
 
-# formatting out_dir
-if out_dir[-1] != '/':
-    out_dir += '/'
 
 #%% starting camb pars and setting krange
 # creating instance of CAMBparams object
