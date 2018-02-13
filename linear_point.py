@@ -1,7 +1,6 @@
 import numpy as np
 from scipy import interpolate
 from scipy.integrate import quad
-import camb
 from scipy.optimize import brentq
 from scipy.interpolate import CubicSpline
 
@@ -43,8 +42,10 @@ def xi_r(r, kmin, kmax, pk, a=1., n=4):
 
     def int_b(k): return -1 * k**2 * np.exp(-(k / a)**n) * \
         pk(k) / (2 * (np.pi**2) * k * r**2)
-    xi_r_a = quad(int_a, kmin, kmax, weight='cos', wvar=r)
-    xi_r_b = quad(int_b, kmin, kmax, weight='sin', wvar=r)
+    xi_r_a = quad(int_a, kmin * (1 + 1e-8), kmax *
+                  (1 - 1e-8), weight='cos', wvar=r)
+    xi_r_b = quad(int_b, kmin * (1 + 1e-8), kmax *
+                  (1 - 1e-8), weight='sin', wvar=r)
     return xi_r_a[0] + xi_r_b[0]
 
 # Dip and peak positions given first derivative of correlation function
@@ -82,8 +83,8 @@ def get_pk_func(results, kmin, kmax):
     - pars
     results: camb's results object
     kmin, kmax: floats, limits in k space"""
-    kh, z, [pk] = results.get_matter_power_spectrum(minkh=kmin * 0.999,
-                                                    maxkh=kmax * 1.001,
+    kh, z, [pk] = results.get_matter_power_spectrum(minkh=kmin,
+                                                    maxkh=kmax,
                                                     npoints=500)
     return interpolate.interp1d(kh, pk, kind='cubic')
 
