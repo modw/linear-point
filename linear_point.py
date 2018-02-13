@@ -4,12 +4,9 @@ from scipy.integrate import quad
 from scipy.optimize import brentq
 from scipy.interpolate import CubicSpline
 
-# correlation function and its derivative given kmin, kmax and P(k)
-
-# np.exp(-k**4) : smoothing kernel to regularize function for the transition k > 1
 
 # correlation function
-
+# np.exp(-(k/a)**n) : smoothing kernel to regularize function for the transition k > 1
 
 def xi(r, kmin, kmax, pk):
     """Two point correlation function for r.
@@ -42,6 +39,8 @@ def xi_r(r, kmin, kmax, pk, a=1., n=4):
 
     def int_b(k): return -1 * k**2 * np.exp(-(k / a)**n) * \
         pk(k) / (2 * (np.pi**2) * k * r**2)
+    # small shift on integration limitis to stay within
+    # interpolation bounds
     xi_r_a = quad(int_a, kmin * (1 + 1e-8), kmax *
                   (1 - 1e-8), weight='cos', wvar=r)
     xi_r_b = quad(int_b, kmin * (1 + 1e-8), kmax *
