@@ -18,7 +18,8 @@ def xi(r, kmin, kmax, pk):
     xi(r): float, value of correlation func at r"""
     # sin is omitted in the integrand because its being weighted in quad
     def int_(k): return np.exp(-k**4) * k**2 * pk(k) / (2 * (np.pi**2) * k * r)
-    xir = quad(int_, kmin, kmax, weight='sin', wvar=r)
+    xir = quad(int_, kmin * (1 + 1e-8), kmax *
+               (1 - 1e-8), weight='sin', wvar=r)
     return xir[0]
 
 # first derivative of correlation function
@@ -50,7 +51,7 @@ def xi_r(r, kmin, kmax, pk, a=1., n=4):
 # Dip and peak positions given first derivative of correlation function
 
 
-def get_lp(xi_r, rmin=60., rmax=150., rsamples=8, root_dr=3.):
+def get_lp(xi_r, rmin=60., rmax=130., rsamples=10, root_dr=5.):
     """Given first derivative of matter correlation function, get position of
     dip and peak.
     - pars
