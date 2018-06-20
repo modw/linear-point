@@ -13,29 +13,28 @@ from scipy.interpolate import CubicSpline
 # correlation function
 # np.exp(-(k/a)**n) : smoothing kernel to regularize function for the transition k > 1
 
-def xi(r, kmin, kmax, pk):
+def xi(r, pk):
     """Two point correlation function for r.
     - pars
     r: float, correlation scale in real space
-    kmin, kmax: floats, min and max of k range
-    pk: function object, power spectrum as function of k, P(k)
+    pk: interp function object, power spectrum as function of k, P(k),
+    limits of integration are given by this object through the x attribute 
     - returns
     xi(r): float, value of correlation func at r"""
     # sin is omitted in the integrand because its being weighted in quad
     def int_(k): return np.exp(-k**4) * k**2 * pk(k) / (2 * (np.pi**2) * k * r)
-    xir = quad(int_, kmin * (1 + 1e-8), kmax *
-               (1 - 1e-8), weight='sin', wvar=r)
+    xir = quad(int_, pk.x[0]*(1+1e-8), pk.x[-1]*(1-1e-8), weight='sin', wvar=r)
     return xir[0]
 
 # first derivative of correlation function
 
 
-def xi_r(r, kmin, kmax, pk, a=1., n=4):
+def xi_r(r, pk, a=1., n=4):
     """First derivative of two point correlation function.
     - pars
     r: float, correlation scale in real space
-    kmin, kmax: floats, min and max of k range
-    pk: function object, power spectrum as function of k, P(k)
+    pk: interp function object, power spectrum as function of k, P(k),
+    limits of integration are given by this object through the x attribute 
     a, n: parameters for filter exp(-(k/a)^n)
     - returns
     xi_r(r): float, value of first derivative of correlation func at r"""
@@ -47,10 +46,8 @@ def xi_r(r, kmin, kmax, pk, a=1., n=4):
         pk(k) / (2 * (np.pi**2) * k * r**2)
     # small shift on integration limitis to stay within
     # interpolation bounds
-    xi_r_a = quad(int_a, kmin * (1 + 1e-8), kmax *
-                  (1 - 1e-8), weight='cos', wvar=r)
-    xi_r_b = quad(int_b, kmin * (1 + 1e-8), kmax *
-                  (1 - 1e-8), weight='sin', wvar=r)
+    xi_r_a = quad(int_a, pk.x[0]*(1+1e-8), pk.x[-1]*(1-1e-8), weight='cos', wvar=r)
+    xi_r_b = quad(int_b, pk.x[0]*(1+1e-8), pk.x[-1]*(1-1e-8), weight='sin', wvar=r)
     return xi_r_a[0] + xi_r_b[0]
 
 # Dip and peak positions given first derivative of correlation function
@@ -111,7 +108,7 @@ def lp_from_cosmo(results, khmin=0.001, khmax=10., a=1., n=4, rmin=60., rmax=130
     dip, peak: set, floats"""
     pk_func = get_pk_func(results, khmin, khmax)
 
-    def dxi_dr(r): return xi_r(r, khmin, khmax, pk_func, a, n)
+    def dxi_dr(r): return xi_r(r, pk_func, a, n)
     lp = get_lp(dxi_dr, rmin, rmax, rsamples, root_dr)
     return lp
 
@@ -126,9 +123,7 @@ def lp_from_cosmo_mpc(results, khmin=0.001, khmax=10., a=1., n=4, rmin=120., rma
     - returns
     dip, peak: set, floats"""
     pk_func = get_pk_func(results, khmin, khmax, k_hunit=False)
-    h = results.hubble_parameter(0)/100
-    _kmin = khmin*h
-    _kmax = khmax*h
-    def dxi_dr(r): return xi_r(r, _kmin, _kmax, pk_func, a, n)
+    
+    def dxi_dr(r): return xi_r(r, pk_func, a, n)
     lp = get_lp(dxi_dr, rmin, rmax, rsamples, root_dr)
     return lp
