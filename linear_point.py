@@ -91,16 +91,17 @@ def get_pk_func(results, kmin, kmax):
 # Linear point position from results object
 
 
-def lp_from_cosmo(results, kmin=0.001, kmax=10., a=1., n=4):
+def lp_from_cosmo(results, kmin=0.001, kmax=10., a=1., n=4, rmin=60., rmax=130., rsamples=10, root_dr=5.):
     """Given cambs results object, calculate positions of dip and peak.
     - pars
     results: camb's results object
     kmin, kmax: floats, limits in k space (should be consistent with limis in results)
     a, n: parameters for filter exp(-(k/a)^n)
+    rmin, rmax, rsamples, root_dr: parameters for root finding of peak and dip in xi(r)
     - returns
     dip, peak: set, floats"""
     pk_func = get_pk_func(results, kmin, kmax)
 
     def dxi_dr(r): return xi_r(r, kmin, kmax, pk_func, a, n)
-    lp = get_lp(dxi_dr)
+    lp = get_lp(dxi_dr, rmin, rmax, rsamples, root_dr)
     return lp
