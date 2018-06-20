@@ -1,3 +1,8 @@
+"""Collection of functions to get linear point from camb results. It follows the convention of camb
+when getting the matter power spectrum P(kh). To get the linear point in Mpc h, use lp_from_cosmo,
+to get it in Mpc, use lp_from_cosmo_mpc.
+"""
+
 import numpy as np
 from scipy import interpolate
 from scipy.integrate import quad
@@ -78,21 +83,41 @@ def get_lp(xi_r, rmin=60., rmax=130., rsamples=10, root_dr=5.):
 # P(k) function object from CAMB's results object
 
 
-def get_pk_func(results, kmin, kmax):
+def get_pk_func(results, khmin, khmax, k_hunit=True):
     """Given cambs results object, calculate power spectrum as function of k.
     - pars
     results: camb's results object
     kmin, kmax: floats, limits in k space"""
-    kh, z, [pk] = results.get_matter_power_spectrum(minkh=kmin,
-                                                    maxkh=kmax,
+    kh, z, [pk] = results.get_matter_power_spectrum(minkh=khmin,
+                                                    maxkh=khmax,
                                                     npoints=500)
-    return interpolate.interp1d(kh, pk, kind='cubic')
+    if k_hunit:
+        return interpolate.interp1d(kh, pk, kind='cubic')
+    else:
+        h = results.hubble_parameter(0)/100
+        return interpolate.interp1d(kh*h, pk, kind='cubic')
 
 # Linear point position from results object
 
 
-def lp_from_cosmo(results, kmin=0.001, kmax=10., a=1., n=4, rmin=60., rmax=130., rsamples=10, root_dr=5.):
-    """Given cambs results object, calculate positions of dip and peak.
+def lp_from_cosmo(results, khmin=0.001, khmax=10., a=1., n=4, rmin=60., rmax=130., rsamples=10, root_dr=5.):
+    """Given cambs results object, calculate positions of dip and peak in Mpc h.
+    - pars
+    results: camb's results object
+    khmin, khmax: floats, limits in kh space (should be consistent with limis in results)
+    a, n: parameters for filter exp(-(k/a)^n)
+    rmin, rmax, rsamples, root_dr: parameters for root finding of peak and dip in xi(r)
+    - returns
+    dip, peak: set, floats"""
+    pk_func = get_pk_func(results, khmin, khmax)
+
+    def dxi_dr(r): return xi_r(r, khmin, khmax, pk_func, a, n)
+    lp = get_lp(dxi_dr, rmin, rmax, rsamples, root_dr)
+    return lp
+
+
+def lp_from_cosmo_mpc(results, khmin=0.001, khmax=10., a=1., n=4, rmin=120., rmax=155., rsamples=10, root_dr=5.):
+    """Given cambs results object, calculate positions of dip and peak in Mpc.
     - pars
     results: camb's results object
     kmin, kmax: floats, limits in k space (should be consistent with limis in results)
@@ -100,8 +125,10 @@ def lp_from_cosmo(results, kmin=0.001, kmax=10., a=1., n=4, rmin=60., rmax=130.,
     rmin, rmax, rsamples, root_dr: parameters for root finding of peak and dip in xi(r)
     - returns
     dip, peak: set, floats"""
-    pk_func = get_pk_func(results, kmin, kmax)
-
-    def dxi_dr(r): return xi_r(r, kmin, kmax, pk_func, a, n)
+    pk_func = get_pk_func(results, khmin, khmax, k_hunit=False)
+    h = results.hubble_parameter(0)/100
+    _kmin = khmin*h
+    _kmax = khmax*h
+    def dxi_dr(r): return xi_r(r, _kmin, _kmax, pk_func, a, n)
     lp = get_lp(dxi_dr, rmin, rmax, rsamples, root_dr)
     return lp
