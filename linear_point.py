@@ -113,7 +113,7 @@ def lp_from_cosmo(results, khmin=0.001, khmax=10., a=1., n=4, rmin=60., rmax=130
     return lp
 
 
-def lp_from_cosmo_mpc(results, khmin=0.001, khmax=10., a=1., n=4, rmin=120., rmax=155., rsamples=10, root_dr=5.):
+def lp_from_cosmo_mpc(results, khmin=0.001, khmax=10., a=1., n=4, rmin=115., rmax=160., rsamples=14, root_dr=5.):
     """Given cambs results object, calculate positions of dip and peak in Mpc.
     - pars
     results: camb's results object
