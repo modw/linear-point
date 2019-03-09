@@ -89,10 +89,10 @@ def get_pk_func(results, khmin, khmax, k_hunit=True):
                                                     maxkh=khmax,
                                                     npoints=500)
     if k_hunit:
-        return interpolate.interp1d(kh, pk, kind='cubic')
+        return CubicSpline(kh, pk)
     else:
         h = results.hubble_parameter(0)/100
-        return interpolate.interp1d(kh*h, pk, kind='cubic')
+        return CubicSpline(kh*h, pk)
 
 # Linear point position from results object
 
