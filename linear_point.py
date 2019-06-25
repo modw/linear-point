@@ -13,7 +13,7 @@ from scipy.interpolate import CubicSpline
 # correlation function
 # np.exp(-(k/a)**n) : smoothing kernel to regularize function for the transition k > 1
 
-def xi(r, pk):
+def xi(r, pk, a=1., n=4):
     """Two point correlation function for r.
     - pars
     r: float, correlation scale in real space
@@ -22,7 +22,8 @@ def xi(r, pk):
     - returns
     xi(r): float, value of correlation func at r"""
     # sin is omitted in the integrand because its being weighted in quad
-    def int_(k): return np.exp(-k**4) * k**2 * pk(k) / (2 * (np.pi**2) * k * r)
+    def int_(k): return np.exp(-(k / a)**n) * \
+        k**2 * pk(k) / (2 * (np.pi**2) * k * r)
     xir = quad(int_, pk.x[0]*(1+1e-8), pk.x[-1]*(1-1e-8), weight='sin', wvar=r)
     return xir[0]
 
@@ -46,8 +47,10 @@ def xi_r(r, pk, a=1., n=4):
         pk(k) / (2 * (np.pi**2) * k * r**2)
     # small shift on integration limitis to stay within
     # interpolation bounds
-    xi_r_a = quad(int_a, pk.x[0]*(1+1e-8), pk.x[-1]*(1-1e-8), weight='cos', wvar=r)
-    xi_r_b = quad(int_b, pk.x[0]*(1+1e-8), pk.x[-1]*(1-1e-8), weight='sin', wvar=r)
+    xi_r_a = quad(int_a, pk.x[0]*(1+1e-8), pk.x[-1]
+                  * (1-1e-8), weight='cos', wvar=r)
+    xi_r_b = quad(int_b, pk.x[0]*(1+1e-8), pk.x[-1]
+                  * (1-1e-8), weight='sin', wvar=r)
     return xi_r_a[0] + xi_r_b[0]
 
 # Dip and peak positions given first derivative of correlation function
@@ -123,7 +126,7 @@ def lp_from_cosmo_mpc(results, khmin=0.001, khmax=10., a=1., n=4, rmin=115., rma
     - returns
     dip, peak: set, floats"""
     pk_func = get_pk_func(results, khmin, khmax, k_hunit=False)
-    
+
     def dxi_dr(r): return xi_r(r, pk_func, a, n)
     lp = get_lp(dxi_dr, rmin, rmax, rsamples, root_dr)
     return lp
